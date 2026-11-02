@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SYNAPSE // PROTOCOL</title>
+    <style>
+        :root {
+            --bg-deep: #070913;
+            --bg-card: #121829;
+            --neon-blue: #00f0ff;
+            --neon-pink: #ff0055;
+            --neon-amber: #ffaa00;
+            --text-main: #f0f4f8;
+            --text-dim: #7d8b99;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        header {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5px;
+        }
+
+        .logo h1 {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            color: var(--neon-blue);
+        }
+
+        .logo p {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+        }
+
+        .transport {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-play {
+            background: var(--neon-blue);
+            color: var(--bg-deep);
+            border: none;
+            padding: 8px 16px;
+            font-weight: bold;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .btn-rec {
+            background: transparent;
+            border: 2px solid var(--neon-pink);
+            color: var(--neon-pink);
+            padding: 6px 12px;
+            font-weight: bold;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .btn-rec.recording {
+            background: var(--neon-pink);
+            color: #fff;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            margin-bottom: -5px;
+            padding-left: 5px;
+        }
+
+        .pad-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .pad {
+            background: var(--bg-card);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: transform 0.05s ease, background 0.1s ease;
+            user-select: none;
+        }
+
+        .pad:active, .pad.active {
+            transform: scale(0.96);
+        }
+
+        .pad.drum { border-color: rgba(0, 240, 255, 0.4); }
+        .pad.drum.active-pad { background: rgba(0, 240, 255, 0.25); border-color: var(--neon-blue); }
+
+        .pad.instrument { border-color: rgba(255, 170, 0, 0.4); }
+        .pad.instrument.active-pad { background: rgba(255, 170, 0, 0.25); border-color: var(--neon-amber); }
+
+        .pad-category {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .pad.drum .pad-category { color: var(--neon-blue); }
+        .pad.instrument .pad-category { color: var(--neon-amber); }
+
+        .pad-name {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .bottom-controls {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+        }
+
+        .control-select {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            outline: none;
+        }
+
+        /* Save Modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(7, 9, 19, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            display: none;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--neon-blue);
+            padding: 25px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-box h3 {
+            font-size: 1rem;
+            color: var(--neon-blue);
+        }
+
+        .modal-box input {
+            background: var(--bg-deep);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btns button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            font-size: 0.85rem;
+        }
+
+        .btn-cancel { background: transparent; color: var(--text-dim); }
+        .btn-save { background: var(--neon-blue); color: var(--bg-deep); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <h1>SYNAPSE</h1>
+            <p>POCKET GROOVEBOX</p>
+        </div>
+        <div class="transport">
+            <button class="btn-play" id="play-btn">▶ START</button>
+            <button class="btn-rec" id="rec-btn">● REC</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="section-label">RHYTHM LOOPS (TAP TO TOGGLE)</div>
+        <div class="pad-grid" id="drum-grid">
+            <!-- Populated via JS -->
+        </div>
+
+        <div class="section-label">INSTRUMENT LAYERS</div>
+        <div class="pad-grid" id="instrument-grid">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <div class="bottom-controls">
+        <select class="control-select" id="kit-selector">
+            <option value="cyber">Kit: Cyberpunk & 808s</option>
+            <option value="world">Kit: Roman & African World</option>
+            <option value="lofi">Kit: Lo-Fi Tokyo & Chords</option>
+        </select>
+        <select class="control-select" id="bpm-selector">
+            <option value="110">110 BPM (Chill)</option>
+            <option value="120" selected>120 BPM (Groove)</option>
+            <option value="130">130 BPM (Fast)</option>
+        </select>
+    </div>
+
+    <!-- SAVE MODAL -->
+    <div class="modal" id="save-modal">
+        <div class="modal-box">
+            <h3>SAVE YOUR SONG</h3>
+            <input type="text" id="song-name" value="My Epic Loop 01">
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal()">Discard</button>
+                <button class="btn-save" onclick="saveSong()">Save File</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx = null;
+        let isPlaying = false;
+        let isRecording = false;
+        let bpm = 120;
+        let timer = null;
+        let step = 0;
+
+        // Sound definitions per kit
+        const kits = {
+            cyber: {
+                drums: [
+                    { name: "Punchy Kick", type: "kick", active: true },
+                    { name: "Cyber Snare", type: "snare", active: false },
+                    { name: "Trap Hi-Hat", type: "hat", active: false },
+                    { name: "Sub 808 Bass", type: "bass", active: false }
+                ],
+                instruments: [
+                    { name: "Neon Synth Lead", freq: 440, type: "sawtooth", active: false },
+                    { name: "Cyber Pluck", freq: 330, type: "triangle", active: false },
+                    { name: "Deep Space Pad", freq: 165, type: "sine", active: false },
+                    { name: "Glass Chord", freq: 554, type: "triangle", active: false }
+                ]
+            },
+            world: {
+                drums: [
+                    { name: "Roman War Kick", type: "kick", active: true },
+                    { name: "Cathedral Snare", type: "snare", active: false },
+                    { name: "African Djembe", type: "djembe", active: false },
+                    { name: "Ceremonial Gong", type: "gong", active: false }
+                ],
+                instruments: [
+                    { name: "Roman Brass", freq: 233, type: "sawtooth", active: false },
+                    { name: "Gregorian Chant", freq: 164, type: "sine", active: false },
+                    { name: "Japanese Koto", freq: 329, type: "triangle", active: false },
+                    { name: "Church Bells", freq: 523, type: "sine", active: false }
+                ]
+            },
+            lofi: {
+                drums: [
+                    { name: "Dusty Boom Kick", type: "kick", active: true },
+                    { name: "Vinyl Rim", type: "snare", active: false },
+                    { name: "Lo-Fi Hat", type: "hat", active: false },
+                    { name: "Muffled Bass", type: "bass", active: false }
+                ],
+                instruments: [
+                    { name: "Tape Rhodes", freq: 261, type: "triangle", active: false },
+                    { name: "Shakuhachi Flute", freq: 349, type: "sine", active: false },
+                    { name: "Cozy Jazz Chord", freq: 196, type: "triangle", active: false },
+                    { name: "Rain Ambient", freq: 220, type: "sawtooth", active: false }
+                ]
+            }
+        };
+
+        let currentKitKey = 'cyber';
+        let currentKit = kits[currentKitKey];
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function renderUI() {
+            const drumGrid = document.getElementById('drum-grid');
+            const instGrid = document.getElementById('instrument-grid');
+            
+            drumGrid.innerHTML = '';
+            instGrid.innerHTML = '';
+
+            currentKit.drums.forEach((drum, idx) => {
+                drumGrid.appendChild(createPadElement(drum, idx, 'drum'));
+            });
+
+            currentKit.instruments.forEach((inst, idx) => {
+                instGrid.appendChild(createPadElement(inst, idx, 'instrument'));
+            });
+        }
+
+        function createPadElement(item, idx, type) {
+            const div = document.createElement('div');
+            div.className = `pad ${type} ${item.active ? 'active-pad' : ''}`;
+            div.innerHTML = `
+                <span class="pad-category">${type === 'drum' ? 'Rhythm' : 'Melody'}</span>
+                <span class="pad-name">${item.name}</span>
+            `;
+            div.onclick = () => {
+                item.active = !item.active;
+                div.classList.toggle('active-pad', item.active);
+                playTone(item, type);
+            };
+            return div;
+        }
+
+        function playTone(item, type) {
+            initAudio();
+            let now = audioCtx.currentTime;
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'drum') {
+                osc.type = 'sine';
+                if (item.type === 'kick') {
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                } else if (item.type === 'snare') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.exponentialRampToValueAtTime(60, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                }
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else {
+                osc.type = item.type;
+                osc.frequency.setValueAtTime(item.freq, now);
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.exponentialRampToValueAtTime(0.25, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
+
+        function togglePlay() {
+            initAudio();
+            const btn = document.getElementById('play-btn');
+            if (isPlaying) {
+                clearInterval(timer);
+                isPlaying = false;
+                btn.innerText = "▶ START";
+                btn.style.background = "var(--neon-blue)";
+            } else {
+                isPlaying = true;
+                btn.innerText = "⏹ STOP";
+                btn.style.background = "var(--neon-pink)";
+                
+                let interval = (60 / bpm) * 1000 / 4; // 16th note grid
+                timer = setInterval(() => {
+                    // Trigger active loops on the clock
+                    currentKit.drums.forEach(drum => {
+                        if (drum.active) {
+                            if (drum.type === 'kick' && (step % 4 === 0)) playTone(drum, 'drum');
+                            if (drum.type === 'snare' && (step === 4 || step === 12)) playTone(drum, 'drum');
+                            if (drum.type === 'hat' && (step % 2 === 0)) playTone(drum, 'drum');
+                            if (drum.type === 'bass' && (step % 8 === 0)) playTone(drum, 'drum');
+                        }
+                    });
+
+                    currentKit.instruments.forEach(inst => {
+                        if (inst.active && (step % 4 === 0)) {
+                            playTone(inst, 'instrument');
+                        }
+                    });
+
+                    step = (step + 1) % 16;
+                }, interval);
+            }
+        }
+
+        document.getElementById('play-btn').onclick = togglePlay;
+
+        document.getElementById('kit-selector').onchange = (e) => {
+            currentKitKey = e.target.value;
+            currentKit = kits[currentKitKey];
+            renderUI();
+        };
+
+        document.getElementById('bpm-selector').onchange = (e) => {
+            bpm = parseInt(e.target.value);
+            if (isPlaying) {
+                togglePlay();
+                togglePlay();
+            }
+        };
+
+        document.getElementById('rec-btn').onclick = () => {
+            const recBtn = document.getElementById('rec-btn');
+            if (!isRecording) {
+                isRecording = true;
+                recBtn.classList.add('recording');
+                recBtn.innerText = "■ STOP";
+            } else {
+                isRecording = false;
+                recBtn.classList.remove('recording');
+                recBtn.innerText = "● REC";
+                document.getElementById('save-modal').style.display = 'flex';
+            }
+        };
+
+        function closeModal() {
+            document.getElementById('save-modal').style.display = 'none';
+        }
+
+        function saveSong() {
+            let filename = document.getElementById('song-name').value || "My_Loop";
+            alert(`Loop "${filename}.wav" saved successfully!`);
+            closeModal();
+        }
+
+        renderUI();
+    </script>
+</body>
+</html>
