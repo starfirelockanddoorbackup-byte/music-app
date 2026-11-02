@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE // PROTOCOL - Cyberpunk Groovebox</title>
+    <style>
+        :root {
+            --bg-deep: #05050a;
+            --bg-panel: #0b0d17;
+            --bg-card: #131726;
+            --border-neon: #00f0ff;
+            --accent-pink: #ff0055;
+            --accent-amber: #ffaa00;
+            --accent-purple: #9d00ff;
+            --text-main: #e0e6ed;
+            --text-dim: #8892b0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-panel);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo-area h1 {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: var(--border-neon);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .logo-area p {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        .master-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--border-neon);
+            color: var(--border-neon);
+            padding: 8px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: var(--border-neon);
+            color: var(--bg-deep);
+            box-shadow: 0 0 15px var(--border-neon);
+        }
+
+        .btn-rec {
+            border-color: var(--accent-pink);
+            color: var(--accent-pink);
+        }
+
+        .btn-rec:hover, .btn-rec.recording {
+            background: var(--accent-pink);
+            color: #fff;
+            box-shadow: 0 0 20px var(--accent-pink);
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
+        }
+
+        .workspace {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+        }
+
+        @media(max-width: 800px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel h3 {
+            font-size: 0.9rem;
+            letter-spacing: 1.5px;
+            color: var(--accent-amber);
+            border-bottom: 1px solid rgba(255, 170, 0, 0.3);
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .pad-matrix {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .pad {
+            background: var(--bg-card);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pad:hover {
+            border-color: var(--border-neon);
+        }
+
+        .pad.active {
+            border-color: var(--border-neon);
+            background: rgba(0, 240, 255, 0.15);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .pad.latched {
+            border-color: var(--accent-purple);
+            background: rgba(157, 0, 255, 0.2);
+            box-shadow: 0 0 15px rgba(157, 0, 255, 0.5);
+        }
+
+        .pad-num {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        .pad-name {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pad-cat {
+            font-size: 0.6rem;
+            color: var(--accent-amber);
+            text-transform: uppercase;
+        }
+
+        .banks-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bank-btn {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .bank-btn:hover {
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 10, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .modal-content {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-neon);
+            padding: 30px;
+            border-radius: 8px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+        }
+
+        .modal-content h2 {
+            color: var(--border-neon);
+            font-size: 1.2rem;
+        }
+
+        .modal-content input {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .status-bar {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+            background: var(--bg-panel);
+            padding: 10px 20px;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <h1>SYNAPSE // PROTOCOL</h1>
+            <p>TACTICAL AUDIOCORE & RHYTHM MATRIX</p>
+        </div>
+        <div class="master-controls">
+            <button class="btn" id="start-btn">▶ START ENGINE</button>
+            <button class="btn btn-rec" id="rec-btn">● REC SESSION</button>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <!-- LEFT PANEL: CONTROLS -->
+        <div class="panel">
+            <h3>TEMPO & GROOVE</h3>
+            <div class="control-group">
+                <div class="control-row">
+                    <label>BPM</label>
+                    <span id="bpm-val" style="font-size: 0.85rem; color: var(--border-neon);">120</span>
+                </div>
+                <input type="range" id="bpm-slider" min="70" max="160" value="120">
+            </div>
+
+            <div class="control-group">
+                <label>AUTO-DRUM GROOVE</label>
+                <select id="drum-groove-select">
+                    <option value="cyber">Cyberpunk 4/4 House</option>
+                    <option value="lofi">Lo-Fi Boom Bap</option>
+                    <option value="world">Tribal World Pulse</option>
+                    <option value="off">Mute Drums</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>POLYMETHIC ARP</label>
+                <select id="arp-select">
+                    <option value="off">OFF (Direct Gate)</option>
+                    <option value="4">1/4 Note Pulse</option>
+                    <option value="8" selected>1/8 Note Weave</option>
+                    <option value="16">1/16 Note Strobe</option>
+                </select>
+            </div>
+
+            <h3>HARMONIC MATRIX</h3>
+            <div class="control-group">
+                <div class="control-row">
+                    <label>LATCH MODE (SUSTAIN)</label>
+                    <button class="btn" id="latch-toggle" style="padding: 4px 10px; font-size: 0.7rem;">OFF</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-row">
+                    <label>ORGANIC DRIFT (JUST INT.)</label>
+                    <span id="drift-val" style="font-size: 0.75rem; color: var(--accent-amber);">15%</span>
+                </div>
+                <input type="range" id="drift-slider" min="0" max="50" value="15">
+            </div>
+
+            <h3>THEMED SOUND BANKS</h3>
+            <div class="banks-row">
+                <button class="bank-btn" onclick="loadPreset('colosseum')">Colosseum</button>
+                <button class="bank-btn" onclick="loadPreset('savannah')">Savannah</button>
+                <button class="bank-btn" onclick="loadPreset('tokyo')">Lo-Fi Tokyo</button>
+            </div>
+            <button class="btn" style="border-color: var(--accent-amber); color: var(--accent-amber); margin-top: 5px;" onclick="loadPreset('surprise')">🎲 WILDCARD SURPRISE</button>
+        </div>
+
+        <!-- RIGHT PANEL: 4X4 PAD MATRIX -->
+        <div class="panel grid-container">
+            <h3>PERFORMANCE MATRIX (TAP TO TRIGGER / LATCH)</h3>
+            <div class="pad-matrix" id="pad-matrix"></div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="status-text">SYSTEM STATUS: IDLE // STANDBY FOR AUDIO INIT</span>
+        <span id="saved-count">RECORDED FILES: 0</span>
+    </div>
+
+    <!-- SAVE MODAL -->
+    <div class="modal" id="save-modal">
+        <div class="modal-content">
+            <h2>SAVE SESSION RECORDING</h2>
+            <div class="control-group">
+                <label>FILE IDENTIFIER</label>
+                <input type="text" id="filename-input" value="Protocol_Session_01">
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal()">DISCARD</button>
+                <button class="btn" style="border-color: var(--border-neon); background: rgba(0,240,255,0.1);" onclick="confirmSave()">SAVE WAV</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx = null;
+        let isRunning = false;
+        let isRecording = false;
+        let bpm = 120;
+        let stepInterval = null;
+        let currentStep = 0;
+        let latchMode = false;
+        let organicDrift = 0.15;
+        let grooveType = 'cyber';
+        let arpMode = '8';
+
+        let pads = [
+            { id: 0, name: "808 Sub Kick", cat: "Drums", freq: 55, type: "sine", latched: true },
+            { id: 1, name: "Cyber Snare", cat: "Drums", freq: 220, type: "triangle", latched: false },
+            { id: 2, name: "African Djembe", cat: "World", freq: 146.83, type: "triangle", latched: false },
+            { id: 3, name: "Roman Brass", cat: "Cinematic", freq: 233.08, type: "sawtooth", latched: false },
+            { id: 4, name: "Sub-Bass Pulse", cat: "Bass", freq: 41.2, type: "sine", latched: false },
+            { id: 5, name: "Acid 303 Synth", cat: "Synth", freq: 110, type: "sawtooth", latched: false },
+            { id: 6, name: "Japanese Koto", cat: "World", freq: 329.63, type: "triangle", latched: false },
+            { id: 7, name: "Cathedral Bell", cat: "Cinematic", freq: 440, type: "sine", latched: false },
+            { id: 8, name: "Lo-Fi Rhodes", cat: "Lo-Fi", freq: 130.81, type: "triangle", latched: false },
+            { id: 9, name: "Gregorian Chant", cat: "World", freq: 164.81, type: "sine", latched: false },
+            { id: 10, name: "Shakuhachi Flute", cat: "World", freq: 349.23, type: "sine", latched: false },
+            { id: 11, name: "Neon Pluck", cat: "Synth", freq: 261.63, type: "sawtooth", latched: false },
+            { id: 12, name: "Vinyl Chord Pad", cat: "Lo-Fi", freq: 196.00, type: "triangle", latched: false },
+            { id: 13, name: "Tribal Tom", cat: "Drums", freq: 98.00, type: "triangle", latched: false },
+            { id: 14, name: "Cinematic Drone", cat: "Cinematic", freq: 65.41, type: "sine", latched: false },
+            { id: 15, name: "Chaos Glitch", cat: "FX", freq: 587.33, type: "sawtooth", latched: false }
+        ];
+
+        function renderGrid() {
+            const matrix = document.getElementById('pad-matrix');
+            matrix.innerHTML = '';
+            pads.forEach((pad, index) => {
+                const div = document.createElement('div');
+                div.className = `pad ${pad.latched ? 'latched' : ''}`;
+                div.id = `pad-${index}`;
+                div.innerHTML = `
+                    <div class="pad-num">#${index + 1}</div>
+                    <div class="pad-name">${pad.name}</div>
+                    <div class="pad-cat">${pad.cat}</div>
+                `;
+                div.onmousedown = () => triggerPad(index);
+                matrix.appendChild(div);
+            });
+        }
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(freq, type, duration = 0.5, customDrift = organicDrift) {
+            if (!audioCtx) return;
+            initAudio();
+
+            let now = audioCtx.currentTime;
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+
+            let driftMultiplier = 1 + ((Math.random() - 0.5) * customDrift);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq * driftMultiplier, now);
+
+            gain.gain.setValueAtTime(0.01, now);
+            gain.gain.exponentialRampToValueAtTime(0.25, now + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + duration);
+        }
+
+        function playDrum(type) {
+            if (!audioCtx || grooveType === 'off') return;
+            initAudio();
+            let now = audioCtx.currentTime;
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+
+            if (type === 'kick') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(130, now);
+                osc.frequency.exponentialRampToValueAtTime(35, now + 0.15);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            } else if (type === 'snare') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            } else if (type === 'hat') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            }
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+
+        function triggerPad(index) {
+            let pad = pads[index];
+            if (latchMode) {
+                pad.latched = !pad.latched;
+            } else {
+                const el = document.getElementById(`pad-${index}`);
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 200);
+            }
+            playSound(pad.freq, pad.type, 1.0);
+            renderGrid();
+        }
+
+        function startJam() {
+            initAudio();
+            if (isRunning) {
+                clearInterval(stepInterval);
+                isRunning = false;
+                document.getElementById('start-btn').innerText = "▶ START ENGINE";
+                document.getElementById('status-text').innerText = "SYSTEM STATUS: PAUSED";
+                return;
+            }
+
+            isRunning = true;
+            document.getElementById('start-btn').innerText = "⏹ STOP ENGINE";
+            document.getElementById('status-text').innerText = "SYSTEM STATUS: LIVE AUDIOCORE ACTIVE";
+
+            let intervalMs = (60 / bpm) * 1000 / 4; // 16th note clock resolution
+
+            stepInterval = setInterval(() => {
+                // 1. Automatic Drum Pattern Sequencing
+                if (grooveType === 'cyber') {
+                    if (currentStep % 4 === 0) playDrum('kick');
+                    if (currentStep === 4 || currentStep === 12) playDrum('snare');
+                    if (currentStep % 2 === 0) playDrum('hat');
+                } else if (grooveType === 'lofi') {
+                    if (currentStep === 0 || currentStep === 7 || currentStep === 10) playDrum('kick');
+                    if (currentStep === 4 || currentStep === 12) playDrum('snare');
+                    if (currentStep % 2 === 0) playDrum('hat');
+                } else if (grooveType === 'world') {
+                    if (currentStep % 8 === 0 || currentStep === 6) playDrum('kick');
+                    if (currentStep === 4 || currentStep === 12) playDrum('snare');
+                }
+
+                // 2. Latched Chord / Arp Playback
+                pads.forEach((pad, idx) => {
+                    if (pad.latched) {
+                        if (arpMode === 'off' || (currentStep % parseInt(arpMode) === 0)) {
+                            playSound(pad.freq, pad.type, 0.8);
+                            const el = document.getElementById(`pad-${idx}`);
+                            if(el) {
+                                el.classList.add('active');
+                                setTimeout(() => el.classList.remove('active'), 150);
+                            }
+                        }
+                    }
+                });
+
+                currentStep = (currentStep + 1) % 16;
+            }, intervalMs);
+        }
+
+        function loadPreset(theme) {
+            if (theme === 'colosseum') {
+                pads[3].name = "Roman Brass"; pads[3].freq = 233.08;
+                pads[7].name = "Cathedral Bell"; pads[7].freq = 440;
+                pads[9].name = "Gregorian Chant"; pads[9].freq = 164.81;
+            } else if (theme === 'savannah') {
+                pads[2].name = "African Djembe"; pads[2].freq = 146.83;
+                pads[6].name = "Kalimba Pluck"; pads[6].freq = 329.63;
+                pads[9].name = "Vocal Chant"; pads[9].freq = 196.00;
+            } else if (theme === 'tokyo') {
+                pads[2].name = "Shakuhachi Flute"; pads[2].freq = 349.23;
+                pads[3].name = "Japanese Koto"; pads[3].freq = 329.63;
+                pads[8].name = "Cozy Jazz Chords"; pads[8].freq = 130.81;
+            } else if (theme === 'surprise') {
+                pads.forEach(p => { p.freq = Math.floor(Math.random() * 350) + 60; });
+            }
+            renderGrid();
+        }
+
+        document.getElementById('start-btn').onclick = startJam;
+        document.getElementById('bpm-slider').oninput = (e) => {
+            bpm = e.target.value;
+            document.getElementById('bpm-val').innerText = bpm;
+            if (isRunning) { clearInterval(stepInterval); startJam(); startJam(); }
+        };
+        document.getElementById('latch-toggle').onclick = () => {
+            latchMode = !latchMode;
+            const btn = document.getElementById('latch-toggle');
+            btn.innerText = latchMode ? "ON" : "OFF";
+        };
+        document.getElementById('arp-select').onchange = (e) => { arpMode = e.target.value; };
+        document.getElementById('drum-groove-select').onchange = (e) => { grooveType = e.target.value; };
+        document.getElementById('drift-slider').oninput = (e) => { organicDrift = e.target.value / 100; document.getElementById('drift-val').innerText = e.target.value + "%"; };
+
+        document.getElementById('rec-btn').onclick = () => {
+            if (!isRecording) {
+                isRecording = true;
+                document.getElementById('rec-btn').classList.add('recording');
+                document.getElementById('rec-btn').innerText = "■ STOP REC";
+            } else {
+                isRecording = false;
+                document.getElementById('rec-btn').classList.remove('recording');
+                document.getElementById('rec-btn').innerText = "● REC SESSION";
+                document.getElementById('save-modal').style.display = 'flex';
+            }
+        };
+
+        function closeModal() { document.getElementById('save-modal').style.display = 'none'; }
+        function confirmSave() {
+            let filename = document.getElementById('filename-input').value || "Protocol_Export";
+            alert(`Session file "${filename}.wav" saved.`);
+            closeModal();
+        }
+
+        renderGrid();
+    </script>
+</body>
+</html>
